@@ -176,18 +176,26 @@ function sendData(data) {
 }
 
 function sartHost() {
-    var txt = document.getElementById('username');
+    var txtUsername = document.getElementById('username');
     var txtAPIKey = document.getElementById('apikey');
-    if (txt.value != undefined && txt.value != '' && txtAPIKey.value != undefined && txtAPIKey.value != '') {
-        player = txt.value;
+    if (txtUsername.value != undefined && txtUsername.value != '' && txtAPIKey.value != undefined && txtAPIKey.value != '') {
+        player = txtUsername.value;
         hostKey = randomString(6, 'A');
         IsHostGame = true;
-        APIKEY=txtAPIKey.value;
+        APIKEY = txtAPIKey.value;
         let newUser = { Name: player, NumberOfVictories: 0, NumberOfDefeats: 0 };
         PLAYERS.push(newUser);
 
         showInfoHost();
         startSendData();
+    }
+
+    if (txtUsername.value == undefined || txtUsername.value == '') {
+        doToast("O Nome deve ser informado!");
+    }
+
+    if (txtAPIKey.value == undefined || txtAPIKey.value == '') {
+        doToast("A Chave da API deve ser informada!");
     }
 
 }
@@ -200,13 +208,25 @@ function joinHost() {
         player = txtUsername.value;
         var txtHostkey = document.getElementById('hostkey');
         hostKey = txtHostkey.value;
-        APIKEY=txtAPIKey.value;
+        APIKEY = txtAPIKey.value;
         IsHostGame = false;
         showInfoHost();
         console.log("joinHost", player, hostKey);
         startSendData(JSON.stringify({ HostGame: hostKey, Action: "adduser", User: player }));
         let newUser = { Name: player, NumberOfVictories: 0, NumberOfDefeats: 0 };
         PLAYERS.push(newUser);
+    }
+
+    if (txtUsername.value == undefined || txtUsername.value == '') {
+        doToast("O Nome deve ser informado!");
+    }
+
+    if (txtHostkey.value == undefined || txtHostkey.value == '') {
+        doToast("A Chave do Servidor deve ser informada!");
+    }
+
+    if (txtAPIKey.value == undefined || txtAPIKey.value == '') {
+        doToast("A Chave da API deve ser informada!");
     }
 }
 
@@ -287,6 +307,8 @@ function addMove(id, idCell, outerPlayer) {
         currentWinner = game.Player1;
     }
 
+    game.PlayerTurn = playerTurn;
+
     let cell = document.getElementById("bord" + id + "cell" + idCell);
 
     placeMark(cell, currentKey);
@@ -327,6 +349,8 @@ function handleClick(e) {
         console.log("handleClick movimento errado Cells", game);
         return;
     }
+
+    if (game.PlayerTurn != player) return;
 
     let playerTurn = game.Player1;
     let currentKey = game.Player2Key;
@@ -375,6 +399,7 @@ function endGame(draw, id, winner) {
     let game = getGameById(id);
 
     game.LastWinner = winner;
+    game.PlayerTurn = winner;
 
     if (game.Player1 == winner) {
         if (game.ScoreX == null) game.ScoreX = 0;
@@ -659,8 +684,12 @@ function copyKey() {
     // Copy the text inside the text field
     navigator.clipboard.writeText(copyText.value);
 
+    doToast("Copiado: " + copyText.value);
+}
+
+function doToast(message){
     var tooltip = document.getElementById("copyinfo");
-    tooltip.innerHTML = "Copiado: " + copyText.value;
+    tooltip.innerHTML = message;
 
     var divtoast = document.getElementById("copytoast");
     var toast = new bootstrap.Toast(divtoast)
