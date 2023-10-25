@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="styles.css">
+    <script src="script.js" defer></script>
+    <title>Tic Tac Toe JS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
+    
+    <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
+</head>
+
+<body>
+    <div class="container text-center">
+        <div class="row" id="headeruser">
+        <div class="col-10">
+            <div class="card" id="cardStart">
+                <img src="data:image/jpeg;base64,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"
+                    class="card-img-top img-fluid img-thumbnail rounded mx-auto d-block"
+                    style="max-width: 200px!important;max-height: 200px!important;" alt="...">
+                <div class="card-body">
+                    <h5 class="card-title">Tic Tac Toe JS</h5>
+                    <p class="card-text" id="gameInfo" >Jogos da Veia</p>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon-username">Jogador:</span>
+                        <input type="text" id="username" class="form-control" placeholder="Digite seu nome" aria-label="username" aria-describedby="basic-addon-username">
+                        <button id="addUser" class="btn btn-outline-secondary" type="button" onclick="sartHost()">Ser Servidor</button>
+                    </div>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon-hostkey">Chave do Servidor:</span>
+                        <input type="text" id="hostkey" class="form-control"   placeholder="Digite a chave de acesso para jogar com amigos" aria-label="hostkey"    aria-describedby="basic-addon-hostkey">
+                        <button id="joinUser" class="btn btn-outline-primary" type="button" onclick="joinHost()">Entrar em um Jogo Iniciado</button>
+                        <button id="copyKey" class="btn btn-outline-primary d-none" type="button" onclick="copyKey()">Copiar para Área de Transferência</button>
+                    </div>
+                    <div class="input-group mb-3" id="dvApiKey">
+                        <span class="input-group-text" id="basic-addon-hostkey">Chave da API:</span>
+                        <input type="text" id="apikey" class="form-control"   placeholder="Digite a chave de acesso da API" aria-label="apikey"    aria-describedby="basic-addon-hostkey">
+                    </div>
+                    <button id="reconect" class="btn btn-outline-danger d-none" type="button" onclick="reconect()">Reconectar ao Servidor</button>
+
+                    <div id="copytoast" class="toast align-items-center" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="d-flex">
+                          <div class="toast-body">
+                            <span id="copyinfo">
+                          </div>
+                          <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                      </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-2">
+
+            <div class="card d-none" id="rankingplayers"  style="width: 20rem;">
+                <div class="card-header">
+                  Ranking
+                </div>
+                <ul class="list-group" id="rankinglist">
+                    
+                  </ul>
+              </div>
+        </div>
+            
+        </div>
+        <div class="row" id="mainGame">     
+            
+        </div>
+    </div>
+</body>
+
+</html>
