@@ -217,7 +217,7 @@ function joinHost() {
         PLAYERS.push(newUser);
 
         let btnReload = document.getElementById('reload');
-        btnReload.classList.add("d-none");
+        btnReload.classList.remove("d-none");
         
     }
 
