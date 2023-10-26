@@ -215,6 +215,10 @@ function joinHost() {
         startSendData(JSON.stringify({ HostGame: hostKey, Action: "adduser", User: player }));
         let newUser = { Name: player, NumberOfVictories: 0, NumberOfDefeats: 0 };
         PLAYERS.push(newUser);
+
+        let btnReload = document.getElementById('reload');
+        btnReload.classList.add("d-none");
+        
     }
 
     if (txtUsername.value == undefined || txtUsername.value == '') {
@@ -697,7 +701,20 @@ function doToast(message){
 }
 
 function reconect() {
-    startSendData(JSON.stringify({ HostGame: hostKey, Action: "reconect", User: player }));
+    startSendData(JSON.stringify({ HostGame: hostKey, Action: "serverreconect", User: player }));    
+}
+
+function reload(){
+    sendData(JSON.stringify({ HostGame: hostKey, Action: "serverreconect", User: player })); 
+    GAMES = [];
+    for (let i = 0; i < PLAYERS.length; i++) {
+        if (PLAYERS[i].Name != player) {
+            let newgame = { Player1: PLAYERS[i].Name, Player2: outerPlayer, Player1Key: X_CLASS, Player2Key: CIRCLE_CLASS, Id: nextId, PlayerTurn: PLAYERS[i].Name, Cells: ['', '', '', '', '', '', '', '', ''], IsFirstMove: false };
+            nextId++;
+            GAMES.push(newgame);
+            sendData(JSON.stringify({ HostGame: hostKey, Action: "reconectgame", User: player, Id: newgame.Id, UserTarget: PLAYERS[i].Name, PlayerTurn: newgame.PlayerTurn, Player1: newgame.Player1, Player2: newgame.Player2, Cells: ['', '', '', '', '', '', '', '', ''] }));
+        }
+    }
 }
 
 function compare(a, b) {
