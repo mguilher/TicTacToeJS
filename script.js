@@ -93,7 +93,7 @@ function handleReceiver(eventdata) {
 }
 
 function startSocket(message) {
-    socket = new WebSocket("wss://libwebsockets.org/testserver");//wss://socketsbay.com/wss/v2/1/demo/");
+    socket = new WebSocket("wss://ws.postman-echo.com/raw");//"wss://echo.websocket.org/ws");
 
     // Connection opened
     socket.addEventListener("open", (event) => {
@@ -167,18 +167,19 @@ function sartably(message) {
 }
 
 function startSendData(message) {
-    sartably(message);
+    startSocket(message);
 }
 
 function sendData(data) {
-    channel.publish('greeting', data);
+    //channel.publish('greeting', data);
+	socket.send(data);
     console.log('sendData : ' + data)
 }
 
 function sartHost() {
     var txtUsername = document.getElementById('username');
     var txtAPIKey = document.getElementById('apikey');
-    if (txtUsername.value != undefined && txtUsername.value != '' && txtAPIKey.value != undefined && txtAPIKey.value != '') {
+    if (txtUsername.value != undefined && txtUsername.value != '') {// && txtAPIKey.value != undefined && txtAPIKey.value != '') {
         player = txtUsername.value;
         hostKey = randomString(6, 'A');
         IsHostGame = true;
@@ -188,27 +189,30 @@ function sartHost() {
 
         showInfoHost();
         startSendData();
+		
+		let btnReload = document.getElementById('reload');
+        btnReload.classList.remove("d-none");
     }
 
     if (txtUsername.value == undefined || txtUsername.value == '') {
         doToast("O Nome deve ser informado!");
     }
 
-    if (txtAPIKey.value == undefined || txtAPIKey.value == '') {
+    /*if (txtAPIKey.value == undefined || txtAPIKey.value == '') {
         doToast("A Chave da API deve ser informada!");
-    }
+    }*/
 
 }
 
 function joinHost() {
     var txtUsername = document.getElementById('username');
     var txtHostkey = document.getElementById('hostkey');
-    var txtAPIKey = document.getElementById('apikey');
-    if (txtUsername.value != undefined && txtUsername.value != '' && txtHostkey.value != undefined && txtHostkey.value != '' && txtAPIKey.value != undefined && txtAPIKey.value != '') {
+    //var txtAPIKey = document.getElementById('apikey');
+    if (txtUsername.value != undefined && txtUsername.value != '' && txtHostkey.value != undefined && txtHostkey.value != '') {// && txtAPIKey.value != undefined && txtAPIKey.value != '') {
         player = txtUsername.value;
         var txtHostkey = document.getElementById('hostkey');
         hostKey = txtHostkey.value;
-        APIKEY = txtAPIKey.value;
+        //APIKEY = txtAPIKey.value;
         IsHostGame = false;
         showInfoHost();
         console.log("joinHost", player, hostKey);
@@ -216,7 +220,7 @@ function joinHost() {
         let newUser = { Name: player, NumberOfVictories: 0, NumberOfDefeats: 0 };
         PLAYERS.push(newUser);
 
-        let btnReload = document.getElementById('reload');
+        let btnReload = document.getElementById('reconect');
         btnReload.classList.remove("d-none");
         
     }
@@ -229,9 +233,9 @@ function joinHost() {
         doToast("A Chave do Servidor deve ser informada!");
     }
 
-    if (txtAPIKey.value == undefined || txtAPIKey.value == '') {
+    /*if (txtAPIKey.value == undefined || txtAPIKey.value == '') {
         doToast("A Chave da API deve ser informada!");
-    }
+    }*/
 }
 
 function loadJoin(obj) {
@@ -510,10 +514,18 @@ function reset(id) {
     let winningMessage = document.getElementById('WinningMessage' + id);
     game.Cells = ['', '', '', '', '', '', '', '', ''];
 
-
-    winningMessage.innerText = `Vez do ${game.LastWinner}`;
-    game.PlayerTurn = game.LastWinner;
-
+	if(game.LastWinner!=undefined)
+	{
+		winningMessage.innerText = `Vez do ${game.LastWinner}`;
+		game.PlayerTurn = game.LastWinner;
+		console.log("reset - LastWinner", game.PlayerTurn, game);
+	}
+	else
+	{
+		winningMessage.innerText = `Vez do ${game.Player1}`;
+		game.PlayerTurn = game.Player1;
+		console.log("reset - Player1", game.PlayerTurn, game);
+	}
     return game.Player2 == player ? game.Player1 : game.Player2;
 }
 
@@ -772,6 +784,8 @@ function bindRanking() {
 
 function clearClient() {
     GAMES = [];
+	
+	if(IsHostGame==false)
     PLAYERS = [];
 
     var tooltip = document.getElementById("copyinfo");

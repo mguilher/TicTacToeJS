@@ -14,7 +14,6 @@
         integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
         crossorigin="anonymous"></script>
     
-    <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
 </head>
 
 <body>
@@ -39,13 +38,13 @@
                         <button id="joinUser" class="btn btn-outline-primary" type="button" onclick="joinHost()">Entrar em um Jogo Iniciado</button>
                         <button id="copyKey" class="btn btn-outline-primary d-none" type="button" onclick="copyKey()">Copiar para Área de Transferência</button>
                     </div>
-                    <div class="input-group mb-3" id="dvApiKey">
+                    <div class="input-group mb-3 d-none" id="dvApiKey">
                         <span class="input-group-text" id="basic-addon-hostkey">Chave da API:</span>
                         <input type="text" id="apikey" class="form-control" placeholder="Digite a chave de acesso da API" aria-label="apikey"  aria-describedby="basic-addon-hostkey">
                     </div>
                     <button id="reconect" class="btn btn-outline-danger d-none" type="button" onclick="reconect()">Reconectar ao Servidor</button>
 
-                    <button id="reload" class="btn btn-outline-danger d-none" type="button" onclick="reload()">Reload ao Servidor</button>
+                    <button id="reload" class="btn btn-outline-danger d-none" type="button" onclick="reload()">Reload Servidor</button>
 
                     <div id="copytoast" class="toast align-items-center" role="alert" aria-live="assertive" aria-atomic="true">
                         <div class="d-flex">
