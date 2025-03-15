@@ -85,7 +85,9 @@ function handleReceiver(eventdata) {
         else if (obj.Action == "endgame" && (IsHostGame == true || obj.UserTarget == player)) {
             changeGame(obj);
         }
-
+        else if (obj.Action == "sarthostranking" && IsHostGame == true) {
+            sartHostRanking();
+        }
     }
     else {
         console.log("Msg minha");
@@ -93,7 +95,7 @@ function handleReceiver(eventdata) {
 }
 
 function startSocket(message) {
-    socket = new WebSocket("wss://ws.postman-echo.com/raw");//"wss://echo.websocket.org/ws");
+    socket = new WebSocket("wss://echo.websocket.org/.ws");
 
     // Connection opened
     socket.addEventListener("open", (event) => {
@@ -109,8 +111,10 @@ function startSocket(message) {
     socket.addEventListener("message", (event) => {
         console.log("Message from server ", event.data);
 
+        console.log("Message  ", event.data.indexOf("{"));
+
         if (event.data.indexOf("{") >= 0) {
-            handleReceiver(event.data);
+            handleReceiver(event.data.trim());
         } else {
             console.log("Data não json");
         }
@@ -134,52 +138,19 @@ function startSocket(message) {
     });
 }
 
-let channel;
-
-function sartably(message) {
-    const ably = new Ably.Realtime.Promise(APIKEY);
-    ably.connection.once('connected');
-    console.log('Connected to Ably!');
-
-
-    // get the channel to subscribe to
-    channel = ably.channels.get('quickstart');
-
-    /*
-      Subscribe to a channel.
-      The promise resolves when the channel is attached
-      (and resolves synchronously if the channel is already attached).
-    */
-    channel.subscribe('greeting', (message) => {
-        console.log('Received a greeting message in realtime: ' + message.data)
-        if (message.data.indexOf("{") >= 0) {
-            handleReceiver(message.data);
-        } else {
-            console.log("Data não json");
-        }
-    });
-
-    if (message) {
-        sendData(message);
-    } else {
-        sendData("hello! gordo");
-    }
-}
-
 function startSendData(message) {
     startSocket(message);
 }
 
 function sendData(data) {
-    //channel.publish('greeting', data);
-	socket.send(data);
+    socket.send(data);
     console.log('sendData : ' + data)
 }
 
 function sartHost() {
     var txtUsername = document.getElementById('username');
     var txtAPIKey = document.getElementById('apikey');
-    if (txtUsername.value != undefined && txtUsername.value != '') {// && txtAPIKey.value != undefined && txtAPIKey.value != '') {
+    if (txtUsername.value != undefined && txtUsername.value != '') {
         player = txtUsername.value;
         hostKey = randomString(6, 'A');
         IsHostGame = true;
@@ -189,30 +160,24 @@ function sartHost() {
 
         showInfoHost();
         startSendData();
-		
-		let btnReload = document.getElementById('reload');
-        btnReload.classList.remove("d-none");
+
+        //let btnReload = document.getElementById('reload');
+        //btnReload.classList.remove("d-none");
     }
 
     if (txtUsername.value == undefined || txtUsername.value == '') {
         doToast("O Nome deve ser informado!");
     }
 
-    /*if (txtAPIKey.value == undefined || txtAPIKey.value == '') {
-        doToast("A Chave da API deve ser informada!");
-    }*/
-
 }
 
 function joinHost() {
     var txtUsername = document.getElementById('username');
     var txtHostkey = document.getElementById('hostkey');
-    //var txtAPIKey = document.getElementById('apikey');
-    if (txtUsername.value != undefined && txtUsername.value != '' && txtHostkey.value != undefined && txtHostkey.value != '') {// && txtAPIKey.value != undefined && txtAPIKey.value != '') {
+    if (txtUsername.value != undefined && txtUsername.value != '' && txtHostkey.value != undefined && txtHostkey.value != '') {
         player = txtUsername.value;
         var txtHostkey = document.getElementById('hostkey');
         hostKey = txtHostkey.value;
-        //APIKEY = txtAPIKey.value;
         IsHostGame = false;
         showInfoHost();
         console.log("joinHost", player, hostKey);
@@ -220,9 +185,9 @@ function joinHost() {
         let newUser = { Name: player, NumberOfVictories: 0, NumberOfDefeats: 0 };
         PLAYERS.push(newUser);
 
-        let btnReload = document.getElementById('reconect');
-        btnReload.classList.remove("d-none");
-        
+        //let btnReload = document.getElementById('reconect');
+        //btnReload.classList.remove("d-none");
+
     }
 
     if (txtUsername.value == undefined || txtUsername.value == '') {
@@ -233,9 +198,6 @@ function joinHost() {
         doToast("A Chave do Servidor deve ser informada!");
     }
 
-    /*if (txtAPIKey.value == undefined || txtAPIKey.value == '') {
-        doToast("A Chave da API deve ser informada!");
-    }*/
 }
 
 function loadJoin(obj) {
@@ -441,16 +403,25 @@ function endGame(draw, id, winner) {
 
         if (PLAYERS.length >= 3) {
             bindRanking();
-            for (let i = 0; i < PLAYERS.length; i++) {
-                if (PLAYERS[i].Name != player) {
-                    sendData(JSON.stringify({ HostGame: hostKey, Action: "ranking", User: player, UserTarget: PLAYERS[i].Name, Players: PLAYERS }));
-                }
-            }
+            sartHostRanking();
         }
     }
-
+    else{
+        if (PLAYERS.length >= 3) {
+            bindRanking();
+            sendData(JSON.stringify({ HostGame: hostKey, Action: "sarthostranking"}));
+        }
+    }
     let usertarget = game.Player2 == player ? game.Player1 : game.Player2;
     sendData(JSON.stringify({ HostGame: hostKey, Action: "endgame", User: player, Id: id, Cells: game.Cells, Winner: winner, UserTarget: usertarget, Draw: draw }));
+}
+
+function sartHostRanking() {
+    for (let i = 0; i < PLAYERS.length; i++) {
+        if (PLAYERS[i].Name != player) {
+            sendData(JSON.stringify({ HostGame: hostKey, Action: "ranking", User: player, UserTarget: PLAYERS[i].Name, Players: PLAYERS }));
+        }
+    }
 }
 
 function isDraw(id) {
@@ -514,18 +485,16 @@ function reset(id) {
     let winningMessage = document.getElementById('WinningMessage' + id);
     game.Cells = ['', '', '', '', '', '', '', '', ''];
 
-	if(game.LastWinner!=undefined)
-	{
-		winningMessage.innerText = `Vez do ${game.LastWinner}`;
-		game.PlayerTurn = game.LastWinner;
-		console.log("reset - LastWinner", game.PlayerTurn, game);
-	}
-	else
-	{
-		winningMessage.innerText = `Vez do ${game.Player1}`;
-		game.PlayerTurn = game.Player1;
-		console.log("reset - Player1", game.PlayerTurn, game);
-	}
+    if (game.LastWinner != undefined) {
+        winningMessage.innerText = `Vez do ${game.LastWinner}`;
+        game.PlayerTurn = game.LastWinner;
+        console.log("reset - LastWinner", game.PlayerTurn, game);
+    }
+    else {
+        winningMessage.innerText = `Vez do ${game.Player1}`;
+        game.PlayerTurn = game.Player1;
+        console.log("reset - Player1", game.PlayerTurn, game);
+    }
     return game.Player2 == player ? game.Player1 : game.Player2;
 }
 
@@ -685,25 +654,18 @@ function buildBord(id, player1, player2) {
     let mainGame = document.getElementById('mainGame')
     mainGame.appendChild(divCol);
 
-    //let userDiv = document.getElementById('headeruser');
-    //userDiv.innerHTML = "<h1>Jogador:" + player + " Servidor:" + hostKey + "</h1>";
 
 }
 
 function copyKey() {
     var copyText = document.getElementById("hostkey");
-
-    // Select the text field
     copyText.select();
-    copyText.setSelectionRange(0, 99999); // For mobile devices
-
-    // Copy the text inside the text field
+    copyText.setSelectionRange(0, 99999);
     navigator.clipboard.writeText(copyText.value);
-
     doToast("Copiado: " + copyText.value);
 }
 
-function doToast(message){
+function doToast(message) {
     var tooltip = document.getElementById("copyinfo");
     tooltip.innerHTML = message;
 
@@ -713,11 +675,11 @@ function doToast(message){
 }
 
 function reconect() {
-    startSendData(JSON.stringify({ HostGame: hostKey, Action: "serverreconect", User: player }));    
+    startSendData(JSON.stringify({ HostGame: hostKey, Action: "serverreconect", User: player }));
 }
 
-function reload(){
-    sendData(JSON.stringify({ HostGame: hostKey, Action: "serverreconect", User: player })); 
+function reload() {
+    sendData(JSON.stringify({ HostGame: hostKey, Action: "serverreconect", User: player }));
     GAMES = [];
     for (let i = 0; i < PLAYERS.length; i++) {
         if (PLAYERS[i].Name != player) {
@@ -745,7 +707,6 @@ function bindRanking() {
 
     let rankinglist = document.getElementById('rankinglist')
     rankinglist.innerHTML = "";
-    //{ Name: outerPlayer, NumberOfVictories: 0, NumberOfDefeats: 0 };
     PLAYERS = PLAYERS.sort(compare);
 
     for (var i = 0; i < PLAYERS.length; i++) {
@@ -784,9 +745,9 @@ function bindRanking() {
 
 function clearClient() {
     GAMES = [];
-	
-	if(IsHostGame==false)
-    PLAYERS = [];
+
+    if (IsHostGame == false)
+        PLAYERS = [];
 
     var tooltip = document.getElementById("copyinfo");
     tooltip.innerHTML = "O servidor foi reconectado aguarde a sincronização de dados";
