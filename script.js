@@ -19,7 +19,7 @@ let IsHostGame = false;
 let hostKey;
 let socket;
 let PLAYERS = [];
-let APIKEY;
+let APIKEY="D5802B9C5B44422BA91F0F77D0E428FD";
 
 
 function getGameById(id) {
@@ -95,7 +95,7 @@ function handleReceiver(eventdata) {
 }
 
 function startSocket(message) {
-    socket = new WebSocket("wss://echo.websocket.org/.ws");
+    socket = new WebSocket("ws://localhost:6969/ws?name=" + player + "&wskey=" + APIKEY);
 
     // Connection opened
     socket.addEventListener("open", (event) => {
@@ -149,12 +149,10 @@ function sendData(data) {
 
 function sartHost() {
     var txtUsername = document.getElementById('username');
-    var txtAPIKey = document.getElementById('apikey');
     if (txtUsername.value != undefined && txtUsername.value != '') {
         player = txtUsername.value;
         hostKey = randomString(6, 'A');
         IsHostGame = true;
-        APIKEY = txtAPIKey.value;
         let newUser = { Name: player, NumberOfVictories: 0, NumberOfDefeats: 0 };
         PLAYERS.push(newUser);
 
@@ -538,9 +536,6 @@ function showInfoHost() {
 
     let txtusername = document.getElementById('username');
     txtusername.setAttribute('disabled', '');
-
-    let txtApiKey = document.getElementById('dvApiKey');
-    txtApiKey.classList.add("d-none");
 }
 
 function buildBord(id, player1, player2) {
