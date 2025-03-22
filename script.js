@@ -95,7 +95,7 @@ function handleReceiver(eventdata) {
 }
 
 function startSocket(message) {
-    socket = new WebSocket("ws://localhost:6969/ws?name=" + player + "&wskey=" + APIKEY);
+    socket = new WebSocket("ws://tictactoejs.runasp.net/ws?name=" + player + "&wskey=" + APIKEY);
 
     // Connection opened
     socket.addEventListener("open", (event) => {
@@ -382,36 +382,34 @@ function endGame(draw, id, winner) {
         span.textContent = game.ScoreO;
     }
 
-    if (IsHostGame == true) {
-
-        if (game.Player1 == winner) {
-            let pl = getPlayerBYName(game.Player1);
-            if (pl != null) pl.NumberOfVictories++;
-
-            let p2 = getPlayerBYName(game.Player2);
-            if (p2 != null) p2.NumberOfDefeats++;
-        }
-        else if (game.player2 == winner) {
-            let pl = getPlayerBYName(game.Player1);
-            if (pl != null) pl.NumberOfDefeats++;
-
-            let p2 = getPlayerBYName(game.Player2);
-            if (p2 != null) p2.NumberOfVictories++;
-        }
-
-        if (PLAYERS.length >= 3) {
-            bindRanking();
-            sartHostRanking();
+    // Apenas o host atualiza o ranking
+    if (IsHostGame == true && !draw) {
+        if (winner) {
+            let winnerPlayer = getPlayerBYName(winner);
+            let loserPlayer = getPlayerBYName(winner == game.Player1 ? game.Player2 : game.Player1);
+            
+            if (winnerPlayer) winnerPlayer.NumberOfVictories++;
+            if (loserPlayer) loserPlayer.NumberOfDefeats++;
+            
+            // Atualiza o ranking se houver jogadores suficientes
+            if (PLAYERS.length >= 2) {
+                bindRanking();
+                sartHostRanking();
+            }
         }
     }
-    else{
-        if (PLAYERS.length >= 3) {
-            bindRanking();
-            sendData(JSON.stringify({ HostGame: hostKey, Action: "sarthostranking"}));
-        }
-    }
+
     let usertarget = game.Player2 == player ? game.Player1 : game.Player2;
-    sendData(JSON.stringify({ HostGame: hostKey, Action: "endgame", User: player, Id: id, Cells: game.Cells, Winner: winner, UserTarget: usertarget, Draw: draw }));
+    sendData(JSON.stringify({ 
+        HostGame: hostKey, 
+        Action: "endgame", 
+        User: player, 
+        Id: id, 
+        Cells: game.Cells, 
+        Winner: winner, 
+        UserTarget: usertarget, 
+        Draw: draw 
+    }));
 }
 
 function sartHostRanking() {
@@ -483,15 +481,14 @@ function reset(id) {
     let winningMessage = document.getElementById('WinningMessage' + id);
     game.Cells = ['', '', '', '', '', '', '', '', ''];
 
-    if (game.LastWinner != undefined) {
+    // Corrigido para usar LastWinner mesmo quando é undefined
+    if (game.LastWinner) {
         winningMessage.innerText = `Vez do ${game.LastWinner}`;
         game.PlayerTurn = game.LastWinner;
-        console.log("reset - LastWinner", game.PlayerTurn, game);
-    }
-    else {
+    } else {
+        // Se não houver LastWinner, usa Player1 como padrão
         winningMessage.innerText = `Vez do ${game.Player1}`;
         game.PlayerTurn = game.Player1;
-        console.log("reset - Player1", game.PlayerTurn, game);
     }
     return game.Player2 == player ? game.Player1 : game.Player2;
 }
@@ -764,6 +761,14 @@ function changeGame(obj) {
     console.log("changeGame", obj);
     if (game == null) return;
 
+    // Atualiza LastWinner apenas se não for empate
+    if (!obj.Draw) {
+        game.LastWinner = obj.Winner;
+    }
+    
+    // Atualiza PlayerTurn com base no LastWinner ou mantém o último vencedor em caso de empate
+    game.PlayerTurn = obj.Draw ? (game.LastWinner || obj.Winner) : obj.Winner;
+
     if (game.Player1 == player || game.Player2 == player) {
 
         const element = document.getElementById("bord" + obj.Id);
@@ -784,36 +789,43 @@ function changeGame(obj) {
         } else {
             winningMessage.innerText = `${obj.Winner} ganhou!`;
             btn.style.visibility = "visible";
+
+            // Atualiza o score local independente de ser host ou não
+            if (game.Player1 == obj.Winner) {
+                if (game.ScoreX == null) game.ScoreX = 0;
+                game.ScoreX++;
+                let span = document.getElementById("bord" + obj.Id + "ScoreX");
+                span.textContent = game.ScoreX;
+            }
+            else if (game.Player2 == obj.Winner) {
+                if (game.ScoreO == null) game.ScoreO = 0;
+                game.ScoreO++;
+                let span = document.getElementById("bord" + obj.Id + "ScoreO");
+                span.textContent = game.ScoreO;
+            }
         }
     } else {
         game.Cells = obj.Cells;
     }
 
-    game.PlayerTurn = obj.Winner
-    game.LastWinner = obj.Winner;
-
-    if (IsHostGame == true) {
-        if (game.Player1 == obj.Winner) {
+    // Resto do código do host para atualização do ranking
+    if (IsHostGame == true && !obj.Draw) {
+        if (obj.Winner) {
             let pl = getPlayerBYName(game.Player1);
-            if (pl != null) pl.NumberOfVictories++;
-
             let p2 = getPlayerBYName(game.Player2);
-            if (p2 != null) p2.NumberOfDefeats++;
-        }
-        else if (game.player2 == obj.Winner) {
-            let pl = getPlayerBYName(game.Player1);
-            if (pl != null) pl.NumberOfDefeats++;
+            
+            if (game.Player1 == obj.Winner) {
+                if (pl != null) pl.NumberOfVictories++;
+                if (p2 != null) p2.NumberOfDefeats++;
+            }
+            else if (game.Player2 == obj.Winner) {
+                if (pl != null) pl.NumberOfDefeats++;
+                if (p2 != null) p2.NumberOfVictories++;
+            }
 
-            let p2 = getPlayerBYName(game.Player2);
-            if (p2 != null) p2.NumberOfVictories++;
-        }
-
-        if (PLAYERS.length >= 3) {
-            bindRanking();
-            for (let i = 0; i < PLAYERS.length; i++) {
-                if (PLAYERS[i].Name != player) {
-                    sendData(JSON.stringify({ HostGame: hostKey, Ation: "ranking", User: player, UserTarget: PLAYERS[i].Name, Players: PLAYERS }));
-                }
+            if (PLAYERS.length >= 2) {
+                bindRanking();
+                sartHostRanking();
             }
         }
     }
