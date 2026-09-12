@@ -95,7 +95,7 @@ function handleReceiver(eventdata) {
 }
 
 function startSocket(message) {
-    socket = new WebSocket("ws://tictactoejs.runasp.net/ws?name=" + player + "&wskey=" + APIKEY);
+    socket = new WebSocket("wss://tictactoejs.runasp.net/ws?name=" + player + "&wskey=" + APIKEY);
 
     // Connection opened
     socket.addEventListener("open", (event) => {
